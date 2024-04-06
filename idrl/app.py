@@ -1,9 +1,11 @@
 # app.py
 
-from flask import Flask
+from idrl import create_app
 from auth.views import auth_blueprint
 
-app = Flask(__name__)
+app = create_app()
+app_context = app.app_context()
+app_context.push()
 
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
