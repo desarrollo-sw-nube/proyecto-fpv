@@ -2,7 +2,7 @@ import os
 from flask import request
 from datetime import datetime
 
-from idlr.modelos import Task, TaskSchema, db
+from idlr.modelos import Task, TaskSchema, db, TaskStatus
 from flask_restful import Resource
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import jwt_required
@@ -26,7 +26,7 @@ class VistaTask(Resource):
             if not os.path.exists('uploads'):
                 os.makedirs('uploads')
             file.save(os.path.join('uploads/', filename))
-            new_video = Task(filename=filename, timestamp=datetime.now() ,status='uploaded')
+            new_video = Task(filename=filename, timestamp=datetime.now() ,status=TaskStatus.UPLOADED)
             db.session.add(new_video)
             db.session.commit()
             return video_schema.dump(new_video), 201
