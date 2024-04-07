@@ -11,7 +11,7 @@ video_schema = TaskSchema()
 
 class VistaTask(Resource):
     
-    # @jwt_required()
+    @jwt_required()
     def post(self):
         if 'file' not in request.files:
             return {'message': 'No file part'}, 400
