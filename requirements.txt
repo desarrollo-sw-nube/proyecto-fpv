@@ -1,1 +1,7 @@
 Flask==3.0.2
+Flask-RESTful==0.3.9
+Flask-SQLAlchemy==2.5.1
+marshmallow==3.12.1
+marshmallow-sqlalchemy==0.25.0
+SQLAlchemy==1.4.15
+flask-jwt-extended
