@@ -1,6 +1,6 @@
 # app.py
 
-from idlr import create_app
+from app import create_app
 from .modelos import db
 from .vistas import VistaTask
 from flask_restful import Api

@@ -2,7 +2,7 @@ import os
 from flask import request
 from datetime import datetime
 
-from idlr.modelos import Task, TaskSchema, db, TaskStatus
+from app.modelos import Task, TaskSchema, db, TaskStatus
 from flask_restful import Resource
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import jwt_required
