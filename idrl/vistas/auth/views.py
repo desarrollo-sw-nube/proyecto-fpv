@@ -2,6 +2,7 @@
 
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import create_access_token
 
 auth_blueprint = Blueprint('auth', __name__)
 
@@ -28,9 +29,10 @@ def signin():
     data = request.get_json()
     username = data['username']
     password = data['password']
+    access_token = create_access_token(identity='username')
 
     user = users.get(username, None)
     if user and check_password_hash(user, password):
-        return jsonify({'message': 'Inicio de sesión exitoso.'}), 200
+        return jsonify({'message': 'Inicio de sesión exitoso.', 'token de acceso': access_token}), 200
     else:
         return jsonify({'message': 'Usuario o contraseña inválidos.'}), 401
