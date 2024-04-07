@@ -30,3 +30,20 @@ class VistaTask(Resource):
             db.session.add(new_video)
             db.session.commit()
             return video_schema.dump(new_video), 201
+
+
+# endpoint "task/<int:id>"
+    @jwt_required()
+    def get(self, id_task):
+        task = Task.query.get(id_task)
+        if not task:
+            return {'message': 'Task not found'}, 404
+        
+        # Construir la URL para descargar/recuperar el archivo procesado
+        processed_file_url = f'/api/tasks/{id_task}/processed'
+
+        # Agregar la URL al diccionario de la tarea
+        task_data = video_schema.dump(task)
+        task_data['processed_file_url'] = processed_file_url
+
+        return task_data
