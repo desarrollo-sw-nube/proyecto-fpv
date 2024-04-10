@@ -47,3 +47,21 @@ class VistaTask(Resource):
         task_data['processed_file_url'] = processed_file_url
 
         return task_data
+    
+    @jwt_required
+    def delete(self, id_task):
+        task = Task.query.get(id_task)
+        if not task:
+            return {'message':'Task not found'}, 404
+        
+        Task.query.filter(Task.id == id_task).delete()
+        db.session.commit()
+        return "", 204
+
+
+class VistaTasks(Resource):
+
+    @jwt_required
+    def get(self):
+        tasks = Task.query.all()
+        return video_schema.dump(tasks, many=True)
