@@ -2,7 +2,7 @@
 
 from app import create_app
 from .modelos import db
-from .vistas import VistaTask
+from .vistas import VistaTask, VistaTasks
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
 from .vistas.auth.views import auth_blueprint
@@ -15,7 +15,8 @@ db.init_app(app)
 db.create_all()
 api = Api(app)
 
-api.add_resource(VistaTask, '/tasks')
+api.add_resource(VistaTask, '/task', '/task/<int:id_task>')
+api.add_resource(VistaTasks, '/tasks')
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
 jwt = JWTManager(app)
