@@ -25,7 +25,7 @@ def signup():
 
 
 @auth_blueprint.route('/signin', methods=['POST'])
-def signin():
+def signIn():
     data = request.get_json()
     username = data['username']
     password = data['password']
