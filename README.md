@@ -20,3 +20,9 @@ Is not recommended to run the app with flask, but if you want to do it, you can 
 export FLASK_APP=app/app.py
 flask run
 ```
+
+## Turn off volumes
+
+```bash
+docker-compose down --volumes
+```
