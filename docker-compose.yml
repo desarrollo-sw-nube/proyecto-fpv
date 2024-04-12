@@ -32,16 +32,5 @@ services:
     depends_on:
       - db
 
-  redis:
-    image: redis:latest
-
-  celery:
-    image: python:3.9-slim
-    command: /bin/sh -c "pip install -r /app/requirements.txt" && celery -A app.tareas.tareas worker -l info
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
-
 volumes:
   postgres-data:

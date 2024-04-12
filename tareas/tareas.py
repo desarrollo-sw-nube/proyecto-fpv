@@ -4,7 +4,7 @@ from moviepy.editor import VideoFileClip, concatenate_videoclips, vfx
 
 celery_app = Celery(__name__, broker='redis://redis:6379/0')
 
-@celery_app.task()
+@celery_app.task(name='procesar_video')
 def process_video(filename):
     input_path = os.path.join('./app/uploads', filename)
     output_path = os.path.join('./app/uploads', filename)

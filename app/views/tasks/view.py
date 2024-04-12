@@ -7,7 +7,12 @@ from app.models import Task, TaskSchema, db, TaskStatus
 from flask_restful import Resource
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import jwt_required
-from ...tareas import process_video
+from celery import Celery
+
+Celery_app = Celery(__name__, broker='redis://redis:6379/0')
+@Celery_app.task(name='procesar_video')
+def procesar_video():
+    pass
 
 video_schema = TaskSchema()
 
@@ -41,7 +46,8 @@ def createTask():
             filename=filename, timestamp=datetime.now(), status=TaskStatus.UPLOADED)
         db.session.add(new_video)
         db.session.commit()
-        process_video.delay(filename)
+        args = (filename)
+        procesar_video.apply_async(args=args, queue='procesar_video')
         return video_schema.dump(new_video), 201
 
 
