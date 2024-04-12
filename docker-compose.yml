@@ -5,25 +5,75 @@ services:
       - "5000:8080"
     depends_on:
       - db
+      - rabbitmq
     environment:
       FLASK_APP: app/app.py
       FLASK_ENV: development
+
+  celery_worker:
+    build: .
+    command: celery -A celery_config.celery_instance worker --loglevel=error
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./app/uploads:/app/uploads
+    environment:
+      FLASK_APP: app/app.py
+      FLASK_ENV: development
+    healthcheck:
+      test:
+        ["CMD-SHELL", "celery -A celery_config.celery_instance inspect ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # flower:
+  #   build: .
+  #   command: celery -A celery_config.celery flower
+  #   ports:
+  #     - "5555:5555"
+  #   depends_on:
+  #     celery_worker:
+  #       condition: service_healthy
+  #   environment:
+  #     FLASK_APP: app/app.py
+  #     FLASK_ENV: development
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
   db:
     image: postgres:latest
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: mydatabase
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
 
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
-      PGADMIN_DEFAULT_PASSWORD: "root"
-    ports:
-      - "5050:80"
-    depends_on:
-      - db
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
+  #     PGADMIN_DEFAULT_PASSWORD: "root"
 
 volumes:
   postgres-data:
+  rabbitmq_data:

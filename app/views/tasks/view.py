@@ -2,22 +2,22 @@
 import os
 from flask import Blueprint, request
 from datetime import datetime
+import logging
 
 from app.models import Task, TaskSchema, db, TaskStatus
 from flask_restful import Resource
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import jwt_required
-from celery import Celery
 
-Celery_app = Celery(__name__, broker='redis://redis:6379/0')
-@Celery_app.task(name='procesar_video')
-def procesar_video():
-    pass
+from celery_config import celery as celery_app
+
 
 video_schema = TaskSchema()
 
 
 task_blueprint = Blueprint('tasks', __name__)
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 @task_blueprint.route('', methods=['GET'])
@@ -46,8 +46,8 @@ def createTask():
             filename=filename, timestamp=datetime.now(), status=TaskStatus.UPLOADED)
         db.session.add(new_video)
         db.session.commit()
-        args = (filename)
-        procesar_video.apply_async(args=args, queue='procesar_video')
+        logging.info(f"Enviando tarea para procesar el video {filename}")
+        celery_app.send_task('tasks.process_video', args=[filename])
         return video_schema.dump(new_video), 201
 
 
@@ -56,7 +56,7 @@ def getTask(id_task):
     task = Task.query.get(id_task)
     if not task:
         return {'message': 'Task not found'}, 404
-    
+
     if task.status != TaskStatus.PROCESSED:
         return {'message': 'Task not processed yet'}, 400
 
