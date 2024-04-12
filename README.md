@@ -26,3 +26,10 @@ flask run
 ```bash
 docker-compose down --volumes
 ```
+
+## Upload image to GCP
+
+1. Install GCP CLI
+2. gcloud init
+3. gcloud auth configure-docker
+4. docker push gcr.io/u-andes/myapp:v1

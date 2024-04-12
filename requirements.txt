@@ -7,5 +7,5 @@ marshmallow
 marshmallow_sqlalchemy
 Werkzeug
 SQLAlchemy
-
+gunicorn
 
