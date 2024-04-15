@@ -1,8 +1,7 @@
 # app.py
 
 from app import create_app
-from app.models import db
-from app.models.app_user import AppUser
+from app.models import db, AppUser
 from app.views.tasks import task_blueprint
 from werkzeug.security import generate_password_hash
 
