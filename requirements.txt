@@ -1,0 +1,14 @@
+psycopg2-binary
+Flask
+Flask_JWT_Extended
+Flask_RESTful
+flask_sqlalchemy
+marshmallow
+marshmallow_sqlalchemy
+Werkzeug
+SQLAlchemy
+celery
+redis
+moviepy
+gunicorn
+flower
