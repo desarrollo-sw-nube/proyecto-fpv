@@ -12,3 +12,5 @@ redis
 moviepy
 gunicorn
 flower
+google-cloud-storage
+

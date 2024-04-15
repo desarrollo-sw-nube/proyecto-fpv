@@ -9,7 +9,8 @@ from flask_restful import Resource
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import jwt_required
 
-from celery_config import celery as celery_app
+from celery_config import celery_instance
+from google.cloud import storage
 
 
 video_schema = TaskSchema()
@@ -18,6 +19,11 @@ video_schema = TaskSchema()
 task_blueprint = Blueprint('tasks', __name__)
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Configuración de Google Cloud Storage
+GCP_BUCKET_NAME = 'fpv_bucket'
+storage_client = storage.Client()
+bucket = storage_client.bucket(GCP_BUCKET_NAME)
 
 
 @task_blueprint.route('', methods=['GET'])
@@ -31,24 +37,34 @@ def getTasks():
 @jwt_required()
 def createTask():
     if 'file' not in request.files:
-        return {'message': 'No file part'}, 400
+        return jsonify({'message': 'No file part'}), 400
 
     file = request.files['file']
     if file.filename == '':
-        return {'message': 'No selected file'}, 400
+        return jsonify({'message': 'No selected file'}), 400
 
     if file:
-        filename = secure_filename(file.filename)
-        if not os.path.exists('uploads'):
-            os.makedirs('uploads')
-        file.save(os.path.join('uploads/', filename))
-        new_video = Task(
-            filename=filename, timestamp=datetime.now(), status=TaskStatus.UPLOADED)
-        db.session.add(new_video)
-        db.session.commit()
-        logging.info(f"Enviando tarea para procesar el video {filename}")
-        celery_app.send_task('tasks.process_video', args=[filename])
-        return video_schema.dump(new_video), 201
+        try:
+            filename = secure_filename(file.filename)
+            blob = bucket.blob(filename)
+            blob.upload_from_string(
+                file.read(),
+                content_type=file.content_type
+            )
+            logging.info(f"Archivo subido a GCP en {filename}")
+
+            new_video = Task(
+                filename=filename, timestamp=datetime.now(), status=TaskStatus.UPLOADED)
+            db.session.add(new_video)
+            db.session.commit()
+
+            logging.info(f"Enviando tarea para procesar el video {filename}")
+            celery_instance.send_task('process_video', args=[filename])
+            return video_schema.dump(new_video), 201
+
+        except Exception as e:
+            logging.error(f"Error al subir el archivo: {e}")
+            return jsonify({'message': 'Failed to upload the file to GCP'}), 500
 
 
 @task_blueprint.route('/<int:id_task>', methods=['GET'])

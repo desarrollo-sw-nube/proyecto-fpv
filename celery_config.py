@@ -7,10 +7,7 @@ from celery import Celery
 
 
 def make_celery(app_name):
-    celery_instance = Celery(app_name, broker='amqp://rabbitmq:5672/')
-    celery_instance.conf.task_routes = {
-        'tasks.process_video': {'queue': 'video_queue'}
-    }
+    celery_instance = Celery(app_name, broker='pyamqp://rabbitmq:5672/')
     return celery_instance
 
 
@@ -20,23 +17,27 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-@celery_instance.task(bind=True)
+@celery_instance.task(name='process_video')
 def process_video(filename):
     logging.info(f"Procesando el video {filename}")
-    input_path = os.path.join('./app/uploads', filename)
-    output_path = os.path.join('./app/uploads', filename)
+    base_path = 'app/uploads'
+    logo_path = 'app/assets/logo.mp4'
 
-    try:
-        clip = VideoFileClip(input_path)
-        clip = clip.resize((clip.size[0], int(clip.size[0] * 9 / 16)))
-        clip = clip.subclip(0, 16).fx(vfx.fadein, 0.5).fx(vfx.fadeout, 0.5)
+    input_path = os.path.join(base_path, filename)
+    output_path = os.path.join(base_path, 'processed_' + filename)
 
-        logo = VideoFileClip('./app/assets/logo.mp4').subclip(0,
-                                                              2).fx(vfx.fadein, 0.5).fx(vfx.fadeout, 0.5)
-        clip = concatenate_videoclips([logo, clip, logo])
+    video = VideoFileClip(input_path)
 
-        clip.write_videofile(output_path)
-        logging.info(f"Video procesado: {filename}")
-    except Exception as e:
-        print(f"Error procesando el video {filename}: {e}")
-    clip.close()
+    logo = VideoFileClip(logo_path).set_duration(2)
+
+    if video.duration > 20:
+        video = video.subclip(0, 20)
+
+    video = video.resize(
+        height=video.size[1], width=int(video.size[1] * 16 / 9))
+
+    final_clip = concatenate_videoclips([logo, video, logo])
+
+    final_clip.write_videofile(output_path, codec='libx264', fps=24)
+
+    return f'Video processed and saved to uploads'
