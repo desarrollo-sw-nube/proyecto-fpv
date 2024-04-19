@@ -7,7 +7,7 @@ from celery import Celery
 
 
 def make_celery(app_name):
-    celery_instance = Celery(app_name, broker='amqp://rabbitmq:5672/')
+    celery_instance = Celery(app_name, broker='URL_DEL_BROKER_EN_LA_NUBE')
     celery_instance.conf.task_routes = {
         'tasks.process_video': {'queue': 'video_queue'}
     }
@@ -23,8 +23,8 @@ logging.basicConfig(level=logging.INFO,
 @celery_instance.task(bind=True)
 def process_video(filename):
     logging.info(f"Procesando el video {filename}")
-    input_path = os.path.join('./app/uploads', filename)
-    output_path = os.path.join('./app/uploads', filename)
+    input_path = os.path.join('./uploads', filename)
+    output_path = os.path.join('./uploads', filename)
 
     try:
         clip = VideoFileClip(input_path)

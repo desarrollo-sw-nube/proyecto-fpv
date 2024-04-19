@@ -14,8 +14,11 @@ RUN pip install -r requirements.txt
 # Exponer el puerto 8080
 EXPOSE 8080
 
+# CMD para montar el directorio NFS en el contenedor
+RUN mkdir /uploads
+RUN echo "servidor_nfs:/ruta/en/el/servidor /uploads nfs defaults 0 0" >> /etc/fstab
 
-# Comando para ejecutar la aplicación usando Gunicorn en el puerto 8080
-CMD [ "gunicorn", "--bind", "0.0.0.0:8080", "app.app:app"]
+# CMD para iniciar el worker de celery
+CMD ["celery", "-A", "celery_config.celery_instance", "worker", "--loglevel=error"]
 
 
