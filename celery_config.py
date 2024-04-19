@@ -23,15 +23,15 @@ logging.basicConfig(level=logging.INFO,
 @celery_instance.task(bind=True)
 def process_video(filename):
     logging.info(f"Procesando el video {filename}")
-    input_path = os.path.join('./uploads', filename)
-    output_path = os.path.join('./uploads', filename)
+    input_path = os.path.join('../uploads', filename)
+    output_path = os.path.join('../uploads', filename)
 
     try:
         clip = VideoFileClip(input_path)
         clip = clip.resize((clip.size[0], int(clip.size[0] * 9 / 16)))
         clip = clip.subclip(0, 16).fx(vfx.fadein, 0.5).fx(vfx.fadeout, 0.5)
 
-        logo = VideoFileClip('./app/assets/logo.mp4').subclip(0,
+        logo = VideoFileClip('./assets/logo.mp4').subclip(0,
                                                               2).fx(vfx.fadein, 0.5).fx(vfx.fadeout, 0.5)
         clip = concatenate_videoclips([logo, clip, logo])
 

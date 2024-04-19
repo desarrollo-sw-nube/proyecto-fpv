@@ -8,7 +8,4 @@ marshmallow_sqlalchemy
 Werkzeug
 SQLAlchemy
 celery
-redis
 moviepy
-gunicorn
-flower

@@ -2,11 +2,10 @@
 FROM python:3.9-slim
 
 
-WORKDIR /app
+WORKDIR /worker
 
 # Copiar los archivos del proyecto al contenedor
-COPY . /app
-
+COPY . /worker
 
 # Instalar las dependencias del proyecto
 RUN pip install -r requirements.txt
