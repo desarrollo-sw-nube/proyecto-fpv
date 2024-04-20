@@ -18,7 +18,7 @@ celery_instance = make_celery("video_tasks")
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
-
+    
 
 @celery_instance.task(bind=True)
 def process_video(filename):
