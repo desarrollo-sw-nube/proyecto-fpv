@@ -1,12 +1,12 @@
-from . import celery
+from app_worker import celery
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from tempfile import NamedTemporaryFile
 from google.cloud import storage
-from .db import db, Task, TaskStatus
 import os
+from app_worker.db import db, Task, TaskStatus
 
 
-@celery.task
+@celery.task(name='process_video')
 def process_video(file_path, file_name, bucket_name, task_id):
     with NamedTemporaryFile(delete=False, suffix='.mp4') as temp_video_file:
         # Suponiendo que file_path es una ruta accesible en el sistema de archivos

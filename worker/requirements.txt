@@ -2,3 +2,8 @@ flask
 celery
 moviepy
 google-cloud-storage
+flask_sqlalchemy
+marshmallow
+marshmallow_sqlalchemy
+SQLAlchemy
+psycopg2-binary
