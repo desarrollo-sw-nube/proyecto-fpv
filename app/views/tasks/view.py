@@ -9,7 +9,8 @@ from flask_restful import Resource
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import jwt_required
 
-from celery_config import celery_instance
+from celery_config import process_video
+# from celery_config import celery_instance
 from google.cloud import storage
 
 
@@ -37,20 +38,16 @@ def getTasks():
 @jwt_required()
 def createTask():
     if 'file' not in request.files:
-        return jsonify({'message': 'No file part'}), 400
+        return 'No file part'
 
     file = request.files['file']
     if file.filename == '':
-        return jsonify({'message': 'No selected file'}), 400
+        return 'No selected file'
 
     if file:
         try:
             filename = secure_filename(file.filename)
-            blob = bucket.blob(filename)
-            blob.upload_from_string(
-                file.read(),
-                content_type=file.content_type
-            )
+            process_video(file.stream, filename, GCP_BUCKET_NAME)
             logging.info(f"Archivo subido a GCP en {filename}")
 
             new_video = Task(
@@ -59,12 +56,12 @@ def createTask():
             db.session.commit()
 
             logging.info(f"Enviando tarea para procesar el video {filename}")
-            celery_instance.send_task('process_video', args=[filename])
+            # celery_instance.send_task('process_video', args=[filename])
             return video_schema.dump(new_video), 201
 
         except Exception as e:
             logging.error(f"Error al subir el archivo: {e}")
-            return jsonify({'message': 'Failed to upload the file to GCP'}), 500
+            return 'Failed to upload the file to GCP', 500
 
 
 @task_blueprint.route('/<int:id_task>', methods=['GET'])
