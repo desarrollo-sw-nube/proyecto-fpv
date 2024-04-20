@@ -1,0 +1,20 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - rabbitmq
+
+  worker:
+    build: .
+    command: ["celery", "-A", "celery", "worker", "--loglevel=info"]
+    depends_on:
+      - rabbitmq
+      - api

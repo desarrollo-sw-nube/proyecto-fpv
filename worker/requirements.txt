@@ -1,0 +1,4 @@
+flask
+celery
+moviepy
+google-cloud-storage

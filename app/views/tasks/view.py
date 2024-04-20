@@ -47,7 +47,7 @@ def createTask():
     if file:
         try:
             filename = secure_filename(file.filename)
-            process_video(file.stream, filename, GCP_BUCKET_NAME)
+            process_video.send_task(file.stream, filename, GCP_BUCKET_NAME)
             logging.info(f"Archivo subido a GCP en {filename}")
 
             new_video = Task(
