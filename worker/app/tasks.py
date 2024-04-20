@@ -2,11 +2,12 @@ from . import celery
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from tempfile import NamedTemporaryFile
 from google.cloud import storage
+from .db import db, Task, TaskStatus
 import os
 
 
 @celery.task
-def process_video(file_path, file_name, bucket_name):
+def process_video(file_path, file_name, bucket_name, task_id):
     with NamedTemporaryFile(delete=False, suffix='.mp4') as temp_video_file:
         # Suponiendo que file_path es una ruta accesible en el sistema de archivos
         with open(file_path, "rb") as f:
@@ -29,6 +30,10 @@ def process_video(file_path, file_name, bucket_name):
         new_blob = bucket.blob(output_filename)
         new_blob.upload_from_filename(
             output_filename, content_type='video/mp4')
+        
+        db.session.query(Task).filter(Task.id == task_id).update(
+            {Task.status: TaskStatus.PROCESSED}
+        )
 
         os.remove(temp_video_file.name)
         os.remove(output_filename)

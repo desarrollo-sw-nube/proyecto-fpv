@@ -47,7 +47,6 @@ def createTask():
     if file:
         try:
             filename = secure_filename(file.filename)
-            process_video.send_task(file.stream, filename, GCP_BUCKET_NAME)
             logging.info(f"Archivo subido a GCP en {filename}")
 
             new_video = Task(
@@ -56,6 +55,7 @@ def createTask():
             db.session.commit()
 
             logging.info(f"Enviando tarea para procesar el video {filename}")
+            process_video.send_task(file.stream, filename, GCP_BUCKET_NAME, new_video.id)
             # celery_instance.send_task('process_video', args=[filename])
             return video_schema.dump(new_video), 201
 

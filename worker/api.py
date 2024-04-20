@@ -1,7 +1,15 @@
 from flask import Flask, request, jsonify
+from .app.db import db
 from worker.app import celery
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'CLOUD_SQL_CONNECTION_STRING'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app_context = app.app_context()
+app_context.push()
+
+db.init_app(app)
+db.create_all()
 
 
 @app.route('/submit_task', methods=['POST'])
