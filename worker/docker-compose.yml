@@ -14,7 +14,7 @@ services:
   api:
     build: .
     ports:
-      - "5000:5000"
+      - "5001:5001"
     depends_on:
       rabbitmq:
         condition: service_healthy

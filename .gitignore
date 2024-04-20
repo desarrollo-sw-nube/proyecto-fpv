@@ -140,3 +140,5 @@ cython_debug/
 # Flask session token
 .flask_session/
 secrets/
+
+*/.env

@@ -1,9 +1,13 @@
+import os
 from flask import Flask, request, jsonify
 from app_worker.db import db
 from app_worker import celery
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:.BKxUao3H@FK7M@34.30.65.0:5432/fpv-db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app_context = app.app_context()
 app_context.push()
@@ -21,4 +25,3 @@ def submit_task():
     task = celery.send_task('process_video', args=[
                             data['file_path'], data['file_name'], data['bucket_name']])
     return jsonify({"message": "Task submitted successfully", "task_id": task.id}), 202
-
