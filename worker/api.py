@@ -3,10 +3,12 @@ from flask import Flask, request, jsonify
 from app_worker.db import db
 from app_worker import celery
 from dotenv import load_dotenv
+import flask_monitoringdashboard as dashboard
 
 load_dotenv()
 
 app = Flask(__name__)
+dashboard.bind(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app_context = app.app_context()

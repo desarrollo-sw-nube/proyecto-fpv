@@ -13,4 +13,4 @@ moviepy
 gunicorn
 flower
 google-cloud-storage
-
+flask_monitoringdashboard

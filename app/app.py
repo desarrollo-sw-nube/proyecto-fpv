@@ -4,6 +4,7 @@ from app import create_app
 from app.models import db, AppUser
 from app.views.tasks import task_blueprint
 from werkzeug.security import generate_password_hash
+import flask_monitoringdashboard as dashboard
 
 
 from flask_jwt_extended import JWTManager
@@ -11,6 +12,7 @@ from app.views.auth.view import auth_blueprint
 
 
 app = create_app('fpv_idlr')
+dashboard.bind(app)
 app.config['DEBUG'] = True
 app.env = 'development'
 app_context = app.app_context()

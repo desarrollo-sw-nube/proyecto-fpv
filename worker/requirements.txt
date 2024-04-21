@@ -8,3 +8,4 @@ marshmallow_sqlalchemy
 SQLAlchemy
 psycopg2-binary
 python-dotenv
+flask_monitoringdashboard
