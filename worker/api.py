@@ -29,6 +29,6 @@ def submit_task():
     if not data or not all(k in data for k in ["file_path", "file_name", "task_id"]):
         return jsonify({"error": "Missing data"}), 400
 
-    task = celery.send_task('process_video', args=[
-                            data['file_path'], data['file_name'], data['task_id']])
-    return jsonify({"message": "Task submitted successfully", "task_id": task.id}), 202
+    celery.send_task('process_video', args=[
+        data['file_path'], data['file_name'], data['task_id']])
+    return jsonify({"message": "Task submitted successfully", "task_id": data['task_id']}), 202

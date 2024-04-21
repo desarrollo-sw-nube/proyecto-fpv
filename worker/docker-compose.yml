@@ -14,7 +14,7 @@ services:
   api:
     build: .
     ports:
-      - "${HOST_PORT:-5000}:80"
+      - "${HOST_PORT:-5002}:5002"
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -25,7 +25,9 @@ services:
   worker:
     build: .
     command: celery -A app_worker.celery worker -l error --events
-
     depends_on:
       rabbitmq:
         condition: service_healthy
+    volumes:
+      - /Users/santiagoforeroa/uploads:/app/uploads
+      # - /uploads:/app/uploads
