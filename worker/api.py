@@ -18,12 +18,17 @@ db.init_app(app)
 db.create_all()
 
 
+@app.route('/')
+def index():
+    return "Hello, World!"
+
+
 @app.route('/submit_task', methods=['POST'])
 def submit_task():
     data = request.get_json()
-    if not data or not all(k in data for k in ["file_path", "file_name", "bucket_name"]):
+    if not data or not all(k in data for k in ["file_path", "file_name", "task_id"]):
         return jsonify({"error": "Missing data"}), 400
 
     task = celery.send_task('process_video', args=[
-                            data['file_path'], data['file_name'], data['bucket_name']])
+                            data['file_path'], data['file_name'], data['task_id']])
     return jsonify({"message": "Task submitted successfully", "task_id": task.id}), 202
