@@ -12,12 +12,14 @@ services:
 
   celery_worker:
     build: .
-    command: celery -A celery_config.celery_instance worker --loglevel=error
+    command: celery -A celery_config.celery_instance worker -l error --events
     depends_on:
       rabbitmq:
         condition: service_healthy
     volumes:
       - ./app/uploads:/app/uploads
+      - ./app/videos:/app/videos
+
     environment:
       FLASK_APP: app/app.py
       FLASK_ENV: development
@@ -28,18 +30,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-
-  # flower:
-  #   build: .
-  #   command: celery -A celery_config.celery flower
-  #   ports:
-  #     - "5555:5555"
-  #   depends_on:
-  #     celery_worker:
-  #       condition: service_healthy
-  #   environment:
-  #     FLASK_APP: app/app.py
-  #     FLASK_ENV: development
 
   rabbitmq:
     image: "rabbitmq:3-management"
@@ -63,16 +53,6 @@ services:
       POSTGRES_DB: mydatabase
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
-
-  # pgadmin:
-  #   image: dpage/pgadmin4
-  #   ports:
-  #     - "5050:80"
-  #   depends_on:
-  #     - db
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
-  #     PGADMIN_DEFAULT_PASSWORD: "root"
 
 volumes:
   postgres-data:

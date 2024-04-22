@@ -14,3 +14,4 @@ gunicorn
 flower
 google-cloud-storage
 flask_monitoringdashboard
+python-dotenv

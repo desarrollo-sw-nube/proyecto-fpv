@@ -1,6 +1,9 @@
 # Usar una imagen oficial de Python como base
 FROM python:3.9-slim
 
+COPY secrets/u-andes-f6e40f24caa5.json /secrets/credentials-file.json
+
+ENV GOOGLE_APPLICATION_CREDENTIALS=/secrets/credentials-file.json
 
 WORKDIR /app
 
