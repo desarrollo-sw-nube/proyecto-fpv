@@ -1,14 +1,19 @@
-FROM python:3.9-slim
+FROM python:latest
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y \
     gcc \
-    python3-dev \   
-    && rm -rf /var/lib/apt/lists/*
+    python3-dev \
+    ffmpeg && \  
+    rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /app/
 COPY . /app/
+
+RUN chmod +x /app/app_worker/resize.sh
+
 
 RUN pip install -r requirements.txt
 

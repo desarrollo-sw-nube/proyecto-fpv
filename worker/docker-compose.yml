@@ -29,5 +29,5 @@ services:
       rabbitmq:
         condition: service_healthy
     volumes:
-      # - /Users/santiagoforeroa/uploads:/app/uploads
-      - /uploads:/app/uploads
+      - /Users/santiagoforeroa/uploads:/app/uploads
+      # - /uploads:/app/uploads
