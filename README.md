@@ -38,6 +38,7 @@ docker-compose down --volumes
 
 docker build --tag 'app_docker' .
 docker run -v /Users/santiagoforeroa/uploads:/uploads -p 5005:5005 'app_docker'
+docker run -v /uploads:/app/uploads -p 5005:5005 'app_docker'
 
 sudo mount -t nfs -o nolock 10.128.0.4:/uploads /local/uploads
 docker run -v /Users/santiagoforeroa/uploads:/uploads 'app_docker'
