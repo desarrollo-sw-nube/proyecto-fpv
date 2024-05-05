@@ -6,7 +6,7 @@ services:
       - "15672:15672"
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 5
       start_period: 10s

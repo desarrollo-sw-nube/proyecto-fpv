@@ -1,12 +1,13 @@
 
 import os
+import uuid
 from flask import Blueprint, request
 from datetime import datetime
 import logging
 import requests
+from google.cloud import storage
 
 from app.models import Task, TaskSchema, db, TaskStatus
-from flask_restful import Resource
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import jwt_required
 from dotenv import load_dotenv
@@ -15,6 +16,10 @@ from dotenv import load_dotenv
 video_schema = TaskSchema()
 load_dotenv()
 
+ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'flv', 'wmv'}
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'secrets/gcp_keys.json'
+storage_client = storage.Client()
+bucket = storage_client.get_bucket('uniandes-fpv-videos')
 
 task_blueprint = Blueprint('tasks', __name__)
 logging.basicConfig(level=logging.INFO,
@@ -26,10 +31,6 @@ logging.basicConfig(level=logging.INFO,
 def getTasks():
     tasks = Task.query.all()
     return video_schema.dump(tasks, many=True)
-
-
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'flv', 'wmv'}
 
 
 def allowed_file(filename):
@@ -46,19 +47,25 @@ def createTask():
         return 'No selected file'
     if file and allowed_file(file.filename):
         try:
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
-            print(file_path)
-            file.save(file_path)
-            logging.info(f"Archivo guardado localmente en {filename}")
+
+            suffix = uuid.uuid4().hex
+            original_filename = secure_filename(file.filename)
+            filename_base, file_extension = os.path.splitext(original_filename)
+            filename = f"{filename_base}_{suffix}{file_extension}"
+
+            blob = bucket.blob(filename)
+            blob.upload_from_file(file, content_type=file.content_type)
+            logging.info(
+                f"Archivo guardado en GCP bucket con nombre modificado: {filename}")
+
             new_task = Task(
-                filename=filename, timestamp=datetime.now(), status=TaskStatus.UPLOADED)
+                filename=filename, timestamp=datetime.now(), status=TaskStatus.UPLOADED, url=blob.public_url)
             db.session.add(new_task)
             db.session.commit()
             logging.info(f"Enviando tarea para procesar el archivo {filename}")
 
             task_data = {
-                "file_path": file_path,
+                "file_path": blob.public_url,
                 "file_name": filename,
                 "task_id": new_task.id,
             }
@@ -69,8 +76,8 @@ def createTask():
             return video_schema.dump(new_task), 201
 
         except Exception as e:
-            logging.error(f"Error al guardar el archivo localmente: {e}")
-            return 'Failed to save the file locally', 500
+            logging.error(f"Error al guardar el archivo en GCP: {e}")
+            return 'Failed to save the file in GCP', 500
     else:
         return 'File not allowed', 400
 

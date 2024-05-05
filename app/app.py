@@ -24,9 +24,6 @@ db.create_all()
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
 app.register_blueprint(task_blueprint, url_prefix='/tasks')
 
-# Print all routes
-print(app.url_map)
-
 
 def seed_db():
 
