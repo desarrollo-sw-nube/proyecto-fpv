@@ -16,6 +16,6 @@ RUN pip install -r requirements.txt
 
 ENV FLASK_APP=app.py
 
-EXPOSE 80 5000 5002 5005
+EXPOSE 80
 
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5005"]
+CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=80"]
