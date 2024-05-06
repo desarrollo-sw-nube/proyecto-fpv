@@ -2,7 +2,13 @@
 
 cd app
 docker build --tag 'app_docker' .
+docker build --platform=linux/amd64 --tag 'app_docker' .
 docker run -v /uploads:/app/uploads -p 5005:5005 'app_docker'
+docker run -v /uploads:/app/uploads -p 80:80 'us-east1-docker.pkg.dev/desarrollo-sw-nube/app-repo/app_docker'
+docker run -v uploads:/app/uploads -p 80:80 'us-east1-docker.pkg.dev/desarrollo-sw-nube/app-repo/app_docker'
+
+docker tag app_docker:latest us-east1-docker.pkg.dev/desarrollo-sw-nube/app-repo/app_docker:latest
+docker push us-east1-docker.pkg.dev/desarrollo-sw-nube/app-repo/app_docker:latest
 
 ## Build and Run Worker module
 

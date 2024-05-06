@@ -21,11 +21,14 @@ app_context.push()
 db.init_app(app)
 db.create_all()
 
+
+@app.route('/')
+def hello_world():
+    return "Welcome to FPV app!"
+
+
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
 app.register_blueprint(task_blueprint, url_prefix='/tasks')
-
-# Print all routes
-print(app.url_map)
 
 
 def seed_db():
