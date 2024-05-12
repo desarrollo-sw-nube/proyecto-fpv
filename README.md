@@ -4,6 +4,7 @@ cd app
 docker build --tag 'app_docker' .
 docker build --platform=linux/amd64 --tag 'app_docker' .
 docker run -v /uploads:/app/uploads -p 5005:5005 'app_docker'
+docker run -v /Users/santiagoforeroa/uploads:/app/uploads -p 80:80 'app_docker'
 docker run -v /uploads:/app/uploads -p 80:80 'us-east1-docker.pkg.dev/desarrollo-sw-nube/app-repo/app_docker'
 docker run -v uploads:/app/uploads -p 80:80 'us-east1-docker.pkg.dev/desarrollo-sw-nube/app-repo/app_docker'
 
@@ -14,6 +15,8 @@ docker push us-east1-docker.pkg.dev/desarrollo-sw-nube/app-repo/app_docker:lates
 
 cd worker
 docker-compose up --build
+docker build -t worker_app .
+docker run -d --name worker_app -v /Users/santiagoforeroa/uploads:/app/uploads worker_app
 
 ### Install
 

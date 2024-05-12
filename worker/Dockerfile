@@ -14,10 +14,8 @@ COPY . /app/
 
 RUN chmod +x /app/app_worker/resize.sh
 
-
 RUN pip install -r requirements.txt
 
-EXPOSE 80 5000 5002
+CMD ["celery", "-A", "app_worker.celery", "worker", "-l", "error", "--events"]
 
-# CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=${PORT:-5000}"]
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5002"]
+
