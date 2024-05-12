@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 import requests
 from google.cloud import storage
+from celery import Celery
 
 from app.models import Task, TaskSchema, db, TaskStatus
 from werkzeug.utils import secure_filename
@@ -15,6 +16,15 @@ from dotenv import load_dotenv
 
 video_schema = TaskSchema()
 load_dotenv()
+
+
+def make_celery():
+    app_celery = Celery(
+        'tasks', broker=os.getenv('BROKER_URL'))
+    return app_celery
+
+
+celery = make_celery()
 
 ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'flv', 'wmv'}
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'secrets/gcp_keys.json'
@@ -64,15 +74,8 @@ def createTask():
             db.session.commit()
             logging.info(f"Enviando tarea para procesar el archivo {filename}")
 
-            task_data = {
-                "file_path": blob.public_url,
-                "file_name": filename,
-                "task_id": new_task.id,
-            }
-            response = requests.post(
-                f"{os.getenv('BROKER_URL')}/submit_task", json=task_data)
-            logging.info(f"Respuesta del servidor de tareas: {response.text}")
-
+            celery.send_task('process_video', args=[
+                blob.public_url, filename, new_task.id])
             return video_schema.dump(new_task), 201
 
         except Exception as e:
