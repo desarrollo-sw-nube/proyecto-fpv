@@ -1,7 +1,7 @@
 import os
 import json
 from google.cloud import pubsub_v1
-from app_worker.tasks import process_video
+from tasks import process_video
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'secrets/gcp_keys.json'
 project_id = os.getenv('GCP_PROJECT_ID')

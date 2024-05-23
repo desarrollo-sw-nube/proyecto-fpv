@@ -2,8 +2,8 @@ from google.cloud import storage, pubsub_v1
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from tempfile import NamedTemporaryFile
 import os
-from app_worker.db import Task, TaskStatus
-from app_worker import db_session, topic_path, publisher
+from db import Task, TaskStatus
+from init import db_session, topic_path, publisher
 import json
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'secrets/gcp_keys.json'
@@ -27,8 +27,8 @@ def process_video(file_path, file_name, task_id):
     with NamedTemporaryFile(delete=False, suffix='.mp4') as temp_video_file:
         blob.download_to_filename(temp_video_file.name)
 
-    bash_script_path = '/app/app_worker/resize.sh'
-    logo_video_path = '/app/app_worker/assets/logo.mp4'
+    bash_script_path = '/app/resize.sh'
+    logo_video_path = '/app/assets/logo.mp4'
     logo = VideoFileClip(logo_video_path).set_duration(2)
 
     output_video_path = os.path.join(
