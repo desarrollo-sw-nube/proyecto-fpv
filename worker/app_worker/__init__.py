@@ -1,19 +1,17 @@
 import os
-from celery import Celery
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from google.cloud import pubsub_v1
+
 load_dotenv()
-
-
-def make_celery():
-    app_celery = Celery('tasks', broker=os.getenv('BROKER_URL'),
-                        backend='rpc://', include=['app_worker.tasks'])
-    return app_celery
-
-
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'secrets/gcp_keys.json'
 engine = create_engine(os.getenv('DB_URL', 'sqlite:///default.db'))
 db_session = scoped_session(sessionmaker(
     autocommit=False, autoflush=False, bind=engine))
 
-celery = make_celery()
+# Configuración de Pub/Sub
+project_id = os.getenv('GCP_PROJECT_ID')
+topic_id = os.getenv('GCP_PUBSUB_TOPIC')
+publisher = pubsub_v1.PublisherClient()
+topic_path = publisher.topic_path(project_id, topic_id)

@@ -1,8 +1,0 @@
-services:
-  worker:
-    build: .
-    command: celery -A app_worker.celery worker -l error --events
-
-    volumes:
-      - /uploads:/app/uploads
-      # - /Users/santiagoforeroa/uploads:/app/uploads

@@ -1,10 +1,10 @@
-celery
-moviepy
 google-cloud-storage
+google-cloud-pubsub
 marshmallow
 marshmallow_sqlalchemy
 SQLAlchemy
 psycopg2-binary
 python-dotenv
-# pillow==7.2.0
+moviepy
+
 

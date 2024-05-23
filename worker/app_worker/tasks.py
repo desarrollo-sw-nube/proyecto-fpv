@@ -1,18 +1,27 @@
-from google.cloud import storage
+from google.cloud import storage, pubsub_v1
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from tempfile import NamedTemporaryFile
 import os
 from app_worker.db import Task, TaskStatus
-import subprocess
-from app_worker import celery, db_session
-
+from app_worker import db_session, topic_path, publisher
+import json
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'secrets/gcp_keys.json'
 storage_client = storage.Client()
 bucket = storage_client.get_bucket('uniandes-fpv-videos')
 
 
-@celery.task(name='process_video')
+def publish_message(file_path, file_name, task_id):
+    message_data = {
+        'file_path': file_path,
+        'file_name': file_name,
+        'task_id': task_id
+    }
+    future = publisher.publish(
+        topic_path, json.dumps(message_data).encode('utf-8'))
+    future.result()
+
+
 def process_video(file_path, file_name, task_id):
     blob = bucket.blob(file_name)
     with NamedTemporaryFile(delete=False, suffix='.mp4') as temp_video_file:

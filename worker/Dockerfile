@@ -15,7 +15,9 @@ COPY . /app/
 RUN chmod +x /app/app_worker/resize.sh
 
 RUN pip install -r requirements.txt
+ENV PYTHONPATH=/app
 
-CMD ["celery", "-A", "app_worker.celery", "worker", "-l", "error", "--events"]
+# CMD ["celery", "-A", "app_worker.celery", "worker", "-l", "error", "--events"]
+CMD ["python", "/app/app_worker/subscriber.py"]
 
 
