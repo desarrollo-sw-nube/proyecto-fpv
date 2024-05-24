@@ -15,8 +15,9 @@ COPY . /app/
 RUN chmod +x /app/resize.sh
 
 RUN pip install -r requirements.txt
+EXPOSE 8080
 
-# CMD ["celery", "-A", "app_worker.celery", "worker", "-l", "error", "--events"]
+
 CMD ["python", "/app/subscriber.py"]
 
 
