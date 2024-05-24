@@ -1,3 +1,4 @@
+import subprocess
 from google.cloud import storage, pubsub_v1
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from tempfile import NamedTemporaryFile
@@ -32,8 +33,8 @@ def process_video(file_path, file_name, task_id):
         temp_video_file = NamedTemporaryFile(delete=False, suffix='.mp4')
         blob.download_to_filename(temp_video_file.name)
 
-        bash_script_path = '/app/app_worker/resize.sh'
-        logo_video_path = '/app/app_worker/assets/logo.mp4'
+        bash_script_path = './resize.sh'                
+        logo_video_path = 'assets/logo.mp4'
         logo = VideoFileClip(logo_video_path).set_duration(2)
 
         output_video_path = os.path.join('uploads', 'processed_' + file_name)
@@ -63,8 +64,7 @@ def process_video(file_path, file_name, task_id):
 
     except Exception as e:
         print(f"Error processing video {file_name}: {e}")
-    finally:
-        # Clean up temporary files
+    finally:        
         if output_video_path and os.path.exists(output_video_path):
             os.remove(output_video_path)
         if temp_video_file and os.path.exists(temp_video_file.name):
