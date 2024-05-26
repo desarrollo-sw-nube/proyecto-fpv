@@ -14,7 +14,6 @@ docker push us-east1-docker.pkg.dev/desarrollo-sw-nube/app-repo/app_docker:lates
 ## Build and Run Worker module
 
 cd worker
-docker-compose up --build
 
 docker build -t worker_app .
 docker build --platform=linux/amd64 --tag 'worker_app' .
@@ -23,6 +22,7 @@ docker push us-east1-docker.pkg.dev/desarrollo-sw-nube/worker-repo/worker_app:la
 
 docker run -v /Users/santiagoforeroa/uploads:/app/uploads worker_app
 docker run -v uploads:/app/uploads worker_app
+docker run worker_app
 
 ### Install
 

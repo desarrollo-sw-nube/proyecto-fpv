@@ -1,3 +1,4 @@
+# worker/Dockerfile
 FROM python:latest
 
 WORKDIR /app
@@ -12,12 +13,8 @@ RUN apt-get update && \
 COPY requirements.txt /app/
 COPY . /app/
 
-RUN chmod +x /app/resize.sh
 
 RUN pip install -r requirements.txt
 EXPOSE 8080
 
-
-CMD ["python", "/app/subscriber.py"]
-
-
+CMD ["gunicorn", "-w", "4", "--preload", "--timeout", "0" , "-b", "0.0.0.0:8080", "app:app"]

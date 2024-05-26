@@ -8,7 +8,7 @@ import requests
 from google.cloud import storage
 
 import json
-from app.models import Task, TaskSchema, db, TaskStatus
+from models import Task, TaskSchema, db, TaskStatus
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import jwt_required
 from dotenv import load_dotenv

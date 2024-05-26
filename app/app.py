@@ -1,42 +1,40 @@
 # app.py
 
-from app import create_app
-from app.models import db, AppUser
-from app.views.tasks import task_blueprint
+from models.models import AppUser
+from views.auth.view import auth_blueprint
+from views.tasks import task_blueprint
+from flask import Flask, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager
 from werkzeug.security import generate_password_hash
 import flask_monitoringdashboard as dashboard
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
-from flask_jwt_extended import JWTManager
-from app.views.auth.view import auth_blueprint
-
-
-app = create_app('fpv_idlr')
-dashboard.bind(app)
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JWT_SECRET_KEY'] = 'secret-key'
+app.config['PROPAGATE_EXCEPTIONS'] = True
 app.config['DEBUG'] = True
 app.env = 'development'
-app_context = app.app_context()
-app_context.push()
 
-db.init_app(app)
+dashboard.bind(app)
+
+db = SQLAlchemy(app)
+jwt = JWTManager(app)
+
+
 db.create_all()
 
 
-@app.route('/')
-def hello_world():
-    return "Welcome to FPV app!"
-
-
-app.register_blueprint(auth_blueprint, url_prefix='/auth')
-app.register_blueprint(task_blueprint, url_prefix='/tasks')
-
-
 def seed_db():
-
     user1 = AppUser.query.filter_by(username="user1").first()
     user2 = AppUser.query.filter_by(username="user2").first()
 
-    if (user1 and user2):
+    if user1 and user2:
         print("La base de datos ya ha sido poblada con datos por defecto.")
         return
     user1 = AppUser(username="user1",
@@ -52,4 +50,21 @@ def seed_db():
 
 
 seed_db()
-jwt = JWTManager(app)
+
+
+@app.route('/')
+def hello_world():
+    return "Welcome to FPV app!"
+
+
+@app.route('/healthz')
+def health_check():
+    return jsonify({'status': 'healthy'})
+
+
+app.register_blueprint(auth_blueprint, url_prefix='/auth')
+app.register_blueprint(task_blueprint, url_prefix='/tasks')
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8080)

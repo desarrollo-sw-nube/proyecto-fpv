@@ -1,73 +1,64 @@
-import subprocess
-from google.cloud import storage, pubsub_v1
+import logging
+import ffmpeg
+from google.cloud import storage
 from moviepy.editor import VideoFileClip, concatenate_videoclips
-from tempfile import NamedTemporaryFile
-import os
 from db import Task, TaskStatus
-from init import db_session, topic_path, publisher
-import json
+from init import db_session
+import tempfile
+import os
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'secrets/gcp_keys.json'
 storage_client = storage.Client()
 bucket = storage_client.get_bucket('uniandes-fpv-videos')
 
-
-def publish_message(file_path, file_name, task_id):
-    message_data = {
-        'file_path': file_path,
-        'file_name': file_name,
-        'task_id': task_id
-    }
-    future = publisher.publish(
-        topic_path, json.dumps(message_data).encode('utf-8'))
-    future.result()
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 def process_video(file_path, file_name, task_id):
-    temp_video_file = None
-    output_video_path = None
-    logo_output_video_path = None
-
     try:
-        blob = bucket.blob(file_name)
-        temp_video_file = NamedTemporaryFile(delete=False, suffix='.mp4')
-        blob.download_to_filename(temp_video_file.name)
+        logger.info('Processing video %s', file_name)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_video_path = os.path.join(temp_dir, 'input_video.mp4')
+            output_video_path = os.path.join(
+                temp_dir, f'processed_{file_name}')
+            logo_output_video_path = os.path.join(
+                temp_dir, f'logo_{file_name}')
 
-        bash_script_path = './resize.sh'                
-        logo_video_path = 'assets/logo.mp4'
-        logo = VideoFileClip(logo_video_path).set_duration(2)
+            blob = bucket.blob(file_name)
+            blob.download_to_filename(temp_video_path)
 
-        output_video_path = os.path.join('uploads', 'processed_' + file_name)
-        logo_output_video_path = os.path.join('uploads', 'logo_' + file_name)
-        if not logo_output_video_path.endswith('.mp4'):
-            logo_output_video_path += '.mp4'
-        if not output_video_path.endswith('.mp4'):
-            output_video_path += '.mp4'
-        
-        subprocess.call([bash_script_path, temp_video_file.name, output_video_path])
+            logger.info('Resizing video')
+            ffmpeg.input(temp_video_path).filter(
+                'scale', 1280, 720).output(output_video_path).run()
+            logger.info('Video resized')
 
-        video_clip = VideoFileClip(output_video_path)
-        if video_clip.duration > 20:
-            video_clip = video_clip.subclip(0, 20)
-        video_clip = concatenate_videoclips([logo, video_clip, logo])
-        video_clip.write_videofile(logo_output_video_path, codec='libx264')
+            logo_video_path = 'assets/logo.mp4'
+            logo = VideoFileClip(logo_video_path).set_duration(2)
+            video_clip = VideoFileClip(output_video_path)
 
-        processed_blob = bucket.blob(logo_output_video_path)
-        processed_blob.upload_from_filename(logo_output_video_path)
+            if video_clip.duration > 20:
+                video_clip = video_clip.subclip(0, 20)
 
-        db_session.query(Task).filter(Task.id == task_id).update(
-            {Task.status: TaskStatus.PROCESSED}
-        )
-        db_session.commit()
+            final_clip = concatenate_videoclips([logo, video_clip, logo])
+            logger.info('Video with logo created')
 
-        return f"Video processed and uploaded as {processed_blob.public_url}"
+            final_clip.write_videofile(logo_output_video_path, codec='libx264')
+            logger.info('Final video with logo written')
+
+            final_blob = bucket.blob(f'logo_{file_name}')
+            final_blob.upload_from_filename(logo_output_video_path)
+            logger.info('Final video with logo uploaded')
+
+            db_session.query(Task).filter(Task.id == task_id).update(
+                {Task.status: TaskStatus.PROCESSED}
+            )
+            db_session.commit()
+            logger.info('Task updated in database')
+
+            return f"Video processed and uploaded as {final_blob.public_url}"
 
     except Exception as e:
+        logger.error(f"Error processing video {file_name}: {e}")
         print(f"Error processing video {file_name}: {e}")
-    finally:        
-        if output_video_path and os.path.exists(output_video_path):
-            os.remove(output_video_path)
-        if temp_video_file and os.path.exists(temp_video_file.name):
-            os.remove(temp_video_file.name)
-        if logo_output_video_path and os.path.exists(logo_output_video_path):
-            os.remove(logo_output_video_path)

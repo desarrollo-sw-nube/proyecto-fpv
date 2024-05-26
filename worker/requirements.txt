@@ -1,10 +1,10 @@
 google-cloud-storage
-google-cloud-pubsub
 marshmallow
 marshmallow_sqlalchemy
 SQLAlchemy
 psycopg2-binary
 python-dotenv
 moviepy
-
-
+ffmpeg-python
+Flask
+gunicorn
