@@ -1,5 +1,3 @@
-# app.py
-
 from models.models import AppUser
 from views.auth.view import auth_blueprint
 from views.tasks import task_blueprint
@@ -27,9 +25,6 @@ db = SQLAlchemy(app)
 jwt = JWTManager(app)
 
 
-db.create_all()
-
-
 def seed_db():
     user1 = AppUser.query.filter_by(username="user1").first()
     user2 = AppUser.query.filter_by(username="user2").first()
@@ -49,22 +44,20 @@ def seed_db():
     print("La base de datos ha sido poblada con datos por defecto.")
 
 
-seed_db()
-
-
-@app.route('/')
-def hello_world():
-    return "Welcome to FPV app!"
-
-
-@app.route('/healthz')
-def health_check():
-    return jsonify({'status': 'healthy'})
-
-
-app.register_blueprint(auth_blueprint, url_prefix='/auth')
-app.register_blueprint(task_blueprint, url_prefix='/tasks')
-
-
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        seed_db()
+
+    @app.route('/')
+    def hello_world():
+        return "Welcome to FPV app!"
+
+    @app.route('/healthz')
+    def health_check():
+        return jsonify({'status': 'healthy'})
+
+    app.register_blueprint(auth_blueprint, url_prefix='/auth')
+    app.register_blueprint(task_blueprint, url_prefix='/tasks')
+
     app.run(host='0.0.0.0', port=8080)
