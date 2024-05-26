@@ -1,4 +1,4 @@
-from models.models import AppUser
+from models.models import AppUser, db
 from views.auth.view import auth_blueprint
 from views.tasks import task_blueprint
 from flask import Flask, jsonify
@@ -21,7 +21,7 @@ app.env = 'development'
 
 dashboard.bind(app)
 
-db = SQLAlchemy(app)
+db.init_app(app)
 jwt = JWTManager(app)
 
 
@@ -44,24 +44,22 @@ def seed_db():
     print("The database has been seeded with default data.")
 
 
+@app.route('/')
+def hello_world():
+    return "Welcome to FPV app!"
+
+
+@app.route('/healthz')
+def health_check():
+    return jsonify({'status': 'healthy'})
+
+
+app.register_blueprint(auth_blueprint, url_prefix='/auth')
+app.register_blueprint(task_blueprint, url_prefix='/tasks')
+
+
 if __name__ == '__main__':
     with app.app_context():
-        # Check if any table exists before creating them
-        if db.engine.table_names():
-            print("Tables already exist in the database.")
-        else:
-            db.create_all()
-            seed_db()
-
-    @app.route('/')
-    def hello_world():
-        return "Welcome to FPV app!"
-
-    @app.route('/healthz')
-    def health_check():
-        return jsonify({'status': 'healthy'})
-
-    app.register_blueprint(auth_blueprint, url_prefix='/auth')
-    app.register_blueprint(task_blueprint, url_prefix='/tasks')
-
-    app.run(host='0.0.0.0', port=8080)
+        # db.create_all()
+        # seed_db()/
+        app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
