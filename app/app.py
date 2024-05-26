@@ -30,24 +30,28 @@ def seed_db():
     user2 = AppUser.query.filter_by(username="user2").first()
 
     if user1 and user2:
-        print("La base de datos ya ha sido poblada con datos por defecto.")
+        print("The database has already been seeded with default data.")
         return
+
     user1 = AppUser(username="user1",
                     password=generate_password_hash("password1"))
     user2 = AppUser(username="user2",
                     password=generate_password_hash("password2"))
     db.session.add(user1)
-    db.session.commit()
     db.session.add(user2)
     db.session.commit()
 
-    print("La base de datos ha sido poblada con datos por defecto.")
+    print("The database has been seeded with default data.")
 
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
-        seed_db()
+        # Check if any table exists before creating them
+        if db.engine.table_names():
+            print("Tables already exist in the database.")
+        else:
+            db.create_all()
+            seed_db()
 
     @app.route('/')
     def hello_world():
