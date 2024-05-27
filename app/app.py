@@ -16,7 +16,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'secret-key'
 app.config['PROPAGATE_EXCEPTIONS'] = True
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 app.env = 'development'
 
 dashboard.bind(app)
@@ -62,4 +62,4 @@ if __name__ == '__main__':
     with app.app_context():
         # db.create_all()
         # seed_db()/
-        app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
+        app.run(host='0.0.0.0', port=8080)
