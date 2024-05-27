@@ -1,3 +1,4 @@
+import logging
 from models.models import AppUser, db
 from views.auth.view import auth_blueprint
 from views.tasks import task_blueprint
@@ -8,6 +9,11 @@ from werkzeug.security import generate_password_hash
 import flask_monitoringdashboard as dashboard
 import os
 from dotenv import load_dotenv
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 
 load_dotenv()
 
@@ -30,7 +36,7 @@ def seed_db():
     user2 = AppUser.query.filter_by(username="user2").first()
 
     if user1 and user2:
-        print("The database has already been seeded with default data.")
+        logger.info("The database has already been seeded with default data.")
         return
 
     user1 = AppUser(username="user1",
@@ -41,7 +47,7 @@ def seed_db():
     db.session.add(user2)
     db.session.commit()
 
-    print("The database has been seeded with default data.")
+    logger.info("Database seeded with default data.")
 
 
 @app.route('/')
@@ -60,6 +66,9 @@ app.register_blueprint(task_blueprint, url_prefix='/tasks')
 
 if __name__ == '__main__':
     with app.app_context():
-        # db.create_all()
-        # seed_db()/
+        if db.engine.table_names():
+            logger.info("Database already exists.")
+        else:
+            db.create_all()
+            seed_db()
         app.run(host='0.0.0.0', port=8080)
