@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     gcc \
-    python3-dev \   
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /app/
@@ -12,10 +12,8 @@ COPY . /app/
 
 RUN pip install -r requirements.txt
 
+ENV FLASK_APP=app/app.py
 
+EXPOSE 8080
 
-ENV FLASK_APP=app.py
-
-EXPOSE 80
-
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=80"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "app:app"]

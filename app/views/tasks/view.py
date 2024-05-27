@@ -7,18 +7,25 @@ import logging
 import requests
 from google.cloud import storage
 
-from app.models import Task, TaskSchema, db, TaskStatus
+import json
+from models import Task, TaskSchema, db, TaskStatus
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import jwt_required
 from dotenv import load_dotenv
+from google.cloud import pubsub_v1
 
 
 video_schema = TaskSchema()
 load_dotenv()
 
-ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'flv', 'wmv'}
+
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'secrets/gcp_keys.json'
+ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'flv', 'wmv'}
 storage_client = storage.Client()
+project_id = os.getenv('GCP_PROJECT_ID')
+topic_id = os.getenv('GCP_PUBSUB_TOPIC')
+publisher = pubsub_v1.PublisherClient()
+topic_path = publisher.topic_path(project_id, topic_id)
 bucket = storage_client.get_bucket('uniandes-fpv-videos')
 
 task_blueprint = Blueprint('tasks', __name__)
@@ -64,15 +71,7 @@ def createTask():
             db.session.commit()
             logging.info(f"Enviando tarea para procesar el archivo {filename}")
 
-            task_data = {
-                "file_path": blob.public_url,
-                "file_name": filename,
-                "task_id": new_task.id,
-            }
-            response = requests.post(
-                f"{os.getenv('BROKER_URL')}/submit_task", json=task_data)
-            logging.info(f"Respuesta del servidor de tareas: {response.text}")
-
+            publish_message(blob.public_url, filename, new_task.id)
             return video_schema.dump(new_task), 201
 
         except Exception as e:
@@ -108,3 +107,14 @@ def deleteTask(id_task):
     Task.query.filter(Task.id == id_task).delete()
     db.session.commit()
     return "", 204
+
+
+def publish_message(file_path, file_name, task_id):
+    message_data = {
+        'file_path': file_path,
+        'file_name': file_name,
+        'task_id': task_id
+    }
+    future = publisher.publish(
+        topic_path, json.dumps(message_data).encode('utf-8'))
+    future.result()

@@ -1,3 +1,4 @@
+# worker/Dockerfile
 FROM python:latest
 
 WORKDIR /app
@@ -12,12 +13,8 @@ RUN apt-get update && \
 COPY requirements.txt /app/
 COPY . /app/
 
-RUN chmod +x /app/app_worker/resize.sh
-
 
 RUN pip install -r requirements.txt
+EXPOSE 8080
 
-EXPOSE 80 5000 5002
-
-# CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=${PORT:-5000}"]
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5002"]
+CMD ["gunicorn", "-w", "4", "--preload", "--timeout", "0" , "-b", "0.0.0.0:8080", "app:app"]

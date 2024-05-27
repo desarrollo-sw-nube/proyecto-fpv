@@ -1,25 +1,53 @@
-# app.py
-
-from app import create_app
-from app.models import db, AppUser
-from app.views.tasks import task_blueprint
+import logging
+from models.models import AppUser, db
+from views.auth.view import auth_blueprint
+from views.tasks import task_blueprint
+from flask import Flask, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager
 from werkzeug.security import generate_password_hash
 import flask_monitoringdashboard as dashboard
+import os
+from dotenv import load_dotenv
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
-from flask_jwt_extended import JWTManager
-from app.views.auth.view import auth_blueprint
+load_dotenv()
 
-
-app = create_app('fpv_idlr')
-dashboard.bind(app)
-app.config['DEBUG'] = True
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JWT_SECRET_KEY'] = 'secret-key'
+app.config['PROPAGATE_EXCEPTIONS'] = True
+app.config['DEBUG'] = False
 app.env = 'development'
-app_context = app.app_context()
-app_context.push()
+
+dashboard.bind(app)
 
 db.init_app(app)
-db.create_all()
+jwt = JWTManager(app)
+
+
+def seed_db():
+    user1 = AppUser.query.filter_by(username="user1").first()
+    user2 = AppUser.query.filter_by(username="user2").first()
+
+    if user1 and user2:
+        logger.info("The database has already been seeded with default data.")
+        return
+
+    user1 = AppUser(username="user1",
+                    password=generate_password_hash("password1"))
+    user2 = AppUser(username="user2",
+                    password=generate_password_hash("password2"))
+    db.session.add(user1)
+    db.session.add(user2)
+    db.session.commit()
+
+    logger.info("Database seeded with default data.")
 
 
 @app.route('/')
@@ -27,29 +55,20 @@ def hello_world():
     return "Welcome to FPV app!"
 
 
+@app.route('/healthz')
+def health_check():
+    return jsonify({'status': 'healthy'})
+
+
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
 app.register_blueprint(task_blueprint, url_prefix='/tasks')
 
 
-def seed_db():
-
-    user1 = AppUser.query.filter_by(username="user1").first()
-    user2 = AppUser.query.filter_by(username="user2").first()
-
-    if (user1 and user2):
-        print("La base de datos ya ha sido poblada con datos por defecto.")
-        return
-    user1 = AppUser(username="user1",
-                    password=generate_password_hash("password1"))
-    user2 = AppUser(username="user2",
-                    password=generate_password_hash("password2"))
-    db.session.add(user1)
-    db.session.commit()
-    db.session.add(user2)
-    db.session.commit()
-
-    print("La base de datos ha sido poblada con datos por defecto.")
-
-
-seed_db()
-jwt = JWTManager(app)
+if __name__ == '__main__':
+    with app.app_context():
+        if db.engine.table_names():
+            logger.info("Database already exists.")
+        else:
+            db.create_all()
+            seed_db()
+        app.run(host='0.0.0.0', port=8080)

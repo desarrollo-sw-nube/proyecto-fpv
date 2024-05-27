@@ -29,8 +29,8 @@ class TaskStatus(enum.Enum):
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(100))
-    url = db.Column(db.String(100))
+    filename = db.Column(db.String(200))
+    url = db.Column(db.String(200))
     timestamp = db.Column(db.DateTime)
     status = db.Column(db.Enum(TaskStatus))
 
